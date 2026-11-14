@@ -10,14 +10,15 @@
   <style>
     :root {
       --bg: #0f172a;
-      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-bg: rgba(30, 41, 59, 0.75);
       --card-border: rgba(148, 163, 184, 0.15);
-      --card-hover: rgba(51, 65, 85, 0.85);
+      --card-hover: rgba(51, 65, 85, 0.9);
       --text-main: #f8fafc;
       --text-sub: #94a3b8;
       --accent-cyan: #38bdf8;
       --accent-indigo: #818cf8;
       --accent-emerald: #34d399;
+      --accent-amber: #fbbf24;
       --badge-bg: rgba(56, 189, 248, 0.12);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,15 +28,15 @@
       color: var(--text-main);
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       line-height: 1.6;
-      padding: 60px 24px 80px;
+      padding: 50px 24px 80px;
     }
     .container {
-      max-width: 1000px;
+      max-width: 1240px;
       margin: 0 auto;
     }
     header {
       text-align: center;
-      margin-bottom: 50px;
+      margin-bottom: 44px;
     }
     .portal-tag {
       display: inline-block;
@@ -47,28 +48,28 @@
       font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.05em;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     h1 {
-      font-size: 2.3rem;
+      font-size: 2.2rem;
       font-weight: 800;
       letter-spacing: -0.03em;
       background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .subtitle {
       color: var(--text-sub);
       font-size: 1.05rem;
-      max-width: 600px;
+      max-width: 680px;
       margin: 0 auto;
     }
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 28px;
-      margin-top: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 26px;
+      margin-top: 24px;
     }
     .dashboard-card {
       position: relative;
@@ -76,7 +77,7 @@
       backdrop-filter: blur(12px);
       border: 1px solid var(--card-border);
       border-radius: 20px;
-      padding: 32px 28px;
+      padding: 30px 26px;
       text-decoration: none;
       color: inherit;
       display: flex;
@@ -87,17 +88,17 @@
     }
     .dashboard-card:hover {
       transform: translateY(-6px);
-      border-color: rgba(56, 189, 248, 0.4);
+      border-color: rgba(56, 189, 248, 0.45);
       background: var(--card-hover);
-      box-shadow: 0 20px 40px -15px rgba(56, 189, 248, 0.2);
+      box-shadow: 0 20px 40px -15px rgba(56, 189, 248, 0.22);
     }
     .card-top {
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
     .badge-group {
       display: flex;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       flex-wrap: wrap;
     }
     .badge {
@@ -112,12 +113,20 @@
       background: rgba(56, 189, 248, 0.15);
       color: var(--accent-cyan);
     }
+    .badge.purple {
+      background: rgba(192, 132, 252, 0.15);
+      color: #c084fc;
+    }
+    .badge.amber {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--accent-amber);
+    }
     .badge.success {
       background: rgba(52, 211, 153, 0.15);
       color: var(--accent-emerald);
     }
     .card-title {
-      font-size: 1.35rem;
+      font-size: 1.3rem;
       font-weight: 700;
       color: #ffffff;
       margin-bottom: 10px;
@@ -127,21 +136,21 @@
     }
     .card-desc {
       color: var(--text-sub);
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       line-height: 1.6;
     }
     .card-features {
-      margin-top: 18px;
-      padding-top: 16px;
+      margin-top: 16px;
+      padding-top: 14px;
       border-top: 1px dashed rgba(148, 163, 184, 0.15);
       list-style: none;
     }
     .card-features li {
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       color: #cbd5e1;
       margin-bottom: 6px;
       display: flex;
-      align-items: center;
+      align-items: baseline;
       gap: 8px;
     }
     .card-features li::before {
@@ -153,7 +162,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 24px;
+      margin-top: 22px;
       padding-top: 16px;
       border-top: 1px solid var(--card-border);
     }
@@ -162,22 +171,13 @@
       align-items: center;
       gap: 6px;
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       color: var(--accent-cyan);
       transition: gap 0.2s ease;
     }
     .dashboard-card:hover .btn-action {
       gap: 10px;
       color: #7dd3fc;
-    }
-    .sub-link {
-      font-size: 0.82rem;
-      color: #94a3b8;
-      text-decoration: underline;
-      transition: color 0.2s;
-    }
-    .sub-link:hover {
-      color: #e2e8f0;
     }
     footer {
       text-align: center;
@@ -191,8 +191,8 @@
   <div class="container">
     <header>
       <span class="portal-tag">Cloudflare Pages 배포 대시보드 허브</span>
-      <h1>제조 품질 & 협력사 분석 포털</h1>
-      <p class="subtitle">부품 수입검사 실시간 집계 현황 및 협력사 재계약 의사결정을 위한 반응형 인터랙티브 대시보드</p>
+      <h1>제조 품질 & 생산 공정 분석 포털</h1>
+      <p class="subtitle">부품 수입검사 실시간 집계부터 협력사 재계약 평가 및 공정조건 원인 규명까지 아우르는 데이터 기반 의사결정 대시보드</p>
     </header>
 
     <main class="dashboard-grid">
@@ -202,7 +202,7 @@
           <div class="badge-group">
             <span class="badge highlight">02회차</span>
             <span class="badge">기초 EDA</span>
-            <span class="badge success">독립 구동형</span>
+            <span class="badge success">실시간 필터</span>
           </div>
           <h2 class="card-title">
             입고검사 품질 대시보드
@@ -219,7 +219,7 @@
         </div>
         <div class="card-bottom">
           <span class="btn-action">대시보드 열기 &rarr;</span>
-          <span style="font-size: 12px; color: #64748b;">inspection_dashboard.html</span>
+          <span style="font-size: 11.5px; color: #64748b;">inspection_dashboard.html</span>
         </div>
       </a>
 
@@ -227,16 +227,16 @@
       <a href="./supplier-review/supplier_review_extended.html" class="dashboard-card">
         <div class="card-top">
           <div class="badge-group">
-            <span class="badge highlight">03회차</span>
-            <span class="badge" style="color: #c084fc; background: rgba(192, 132, 252, 0.15);">심화 분석</span>
+            <span class="badge purple">03회차</span>
+            <span class="badge">품질 평가</span>
             <span class="badge success">Extended 버전</span>
           </div>
           <h2 class="card-title">
-            협력사 재계약 품질검토 대시보드
+            협력사 재계약 품질검토
             <span>↗</span>
           </h2>
           <p class="card-desc">
-            치수·중량의 공정능력(Cpk), A사의 라인·작업조별 불량 원인 및 주차별 치수 드리프트, B vs C 비교 분석을 제공하는 종합 의사결정 대시보드입니다.
+            치수·중량 공정능력(Cpk), A사의 라인·작업조별 불량 원인 및 주차별 치수 드리프트, B vs C 비교 분석을 제공하는 종합 의사결정 대시보드입니다.
           </p>
           <ul class="card-features">
             <li>치수/중량 품질 지표 & Cpk(공정능력지수) 비교</li>
@@ -246,16 +246,42 @@
         </div>
         <div class="card-bottom">
           <span class="btn-action">대시보드 열기 &rarr;</span>
-          <span style="font-size: 12px; color: #64748b;">supplier_review_extended.html</span>
+          <span style="font-size: 11.5px; color: #64748b;">supplier_review_extended.html</span>
+        </div>
+      </a>
+
+      <!-- 04회차 생산조건 검토 대시보드 (신규) -->
+      <a href="./process-correlation/correlation_dashboard.html" class="dashboard-card">
+        <div class="card-top">
+          <div class="badge-group">
+            <span class="badge amber">04회차 신규</span>
+            <span class="badge">공정 상관성</span>
+            <span class="badge success">Plotly 반응형</span>
+          </div>
+          <h2 class="card-title">
+            협력사 생산조건 검토
+            <span>↗</span>
+          </h2>
+          <p class="card-desc">
+            공구 누적가공수(마모), 가공시간, 설비별/작업조별 상관분석을 통해 협력사 A의 치수 불량 근본 원인을 규명하고 맞춤형 개선안(인터록)을 제시합니다.
+          </p>
+          <ul class="card-features">
+            <li>공구 가공수 vs 치수 산점도 & 피어슨 상관분석</li>
+            <li>A사 4대 설비 동일 축 비교 및 2호선·야간조 집중 원인</li>
+            <li>공구교체 500회 제한 인터록 및 실시간 데이터 탐색기</li>
+          </ul>
+        </div>
+        <div class="card-bottom">
+          <span class="btn-action">대시보드 열기 &rarr;</span>
+          <span style="font-size: 11.5px; color: #64748b;">correlation_dashboard.html</span>
         </div>
       </a>
     </main>
 
     <footer>
-      <p>제조 품질 데이터 분석 프로젝트 • Cloudflare Pages Hosting Ready</p>
-      <p style="margin-top: 6px; font-size: 12px;">데이터는 HTML 내부에 JSON으로 내장되어 있어 별도의 백엔드 API나 외부 DB 없이 고속 구동됩니다.</p>
+      <p>제조 품질 데이터 분석 프로젝트 • Cloudflare Pages Hosting</p>
+      <p style="margin-top: 6px; font-size: 12px; color: #475569;">모든 대시보드는 셀프 컨테인드(Self-contained) 방식으로 제작되어 고속 렌더링을 지원합니다.</p>
     </footer>
   </div>
 </body>
 </html>
-
