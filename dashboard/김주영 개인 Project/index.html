@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>[Stage 7 · LG화학 AOT + 뉴스 NLP 완전체] 납사·에틸렌 예측 & 원료구매·가동률 최적화 대시보드</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased min-h-screen p-6">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- 헤더 -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
+      <div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-600 text-white">Stage 7 · 뉴스 NLP 감성 + OVX 공포지수 탑재</span>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-600/90 text-white">1주 방향적중 78.8% · 4주 추세적중 90.3% · 가격정확도 97.2%</span>
+          <span id="top-weight-badge" class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-slate-800 text-cyan-300 border border-slate-700">동적 가중치: ECM 54% · XGB 23% · LGB 23%</span>
+        </div>
+        <h1 class="text-2xl font-bold mt-1.5 text-white">LG화학 AOT + 석유화학 뉴스 NLP 감성 결합 납사·에틸렌 예측 & 조달 최적화 시스템</h1>
+        <p class="text-sm text-slate-400 mt-0.5">구글 뉴스 RSS 실시간 크롤링(48건) NLP 감성지수 + CBOE 원유공포지수(^OVX) + TreeSHAP 달러 분해 + 스팟 매수 타이밍(Buy/Wait)</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="setScenario('base')" id="sc-base" class="px-3 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white shadow">① Base (현 추세)</button>
+        <button onclick="setScenario('shock')" id="sc-shock" class="px-3 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">② 중동전쟁·NLP공포(+0.85)</button>
+        <button onclick="setScenario('recovery')" id="sc-recovery" class="px-3 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">③ 중국부양·수요호재(-0.40)</button>
+        <button onclick="setScenario('us_freeze')" id="sc-us_freeze" class="px-3 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">④ 북미한파(가스 급등)</button>
+        <button onclick="setScenario('recession')" id="sc-recession" class="px-3 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">⑤ 공급과잉·침체뉴스(-0.75)</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- 좌측: 6대 슬라이더(NLP 포함) & 실시간 XAI TreeSHAP 달러 기여도 분해 (4 cols) -->
+      <div class="lg:col-span-4 space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3.5 shadow-lg">
+          <div class="border-b border-slate-800 pb-2">
+            <h2 class="text-base font-bold text-white">거시·원가·운임·뉴스 NLP 컨트롤러</h2>
+            <p class="text-xs text-slate-400">6번째 슬라이더로 뉴스 NLP 감성(-1.0 완화 ~ +1.0 위기)을 직접 조절해 보세요.</p>
+          </div>
+
+          <div class="space-y-3 text-sm">
+            <div>
+              <div class="flex justify-between mb-0.5"><span class="text-slate-300">① 두바이유 (Dubai Crude)</span><span id="lbl-dubai" class="font-mono font-bold text-amber-400">91.0 $/bbl</span></div>
+              <input id="inp-dubai" type="range" min="50" max="130" step="0.5" value="91.0" oninput="runSim()" class="w-full accent-amber-500 cursor-pointer" />
+            </div>
+            <div>
+              <div class="flex justify-between mb-0.5"><span class="text-slate-300">② 위안/달러 (USD/CNY · 중국수요)</span><span id="lbl-cny" class="font-mono font-bold text-rose-400">7.24 CNY</span></div>
+              <input id="inp-cny" type="range" min="6.50" max="7.60" step="0.01" value="7.24" oninput="runSim()" class="w-full accent-rose-500 cursor-pointer" />
+            </div>
+            <div>
+              <div class="flex justify-between mb-0.5"><span class="text-slate-300">③ 원/달러 환율 (USD/KRW)</span><span id="lbl-krw" class="font-mono font-bold text-indigo-400">1,405 원</span></div>
+              <input id="inp-krw" type="range" min="1100" max="1550" step="5" value="1405" oninput="runSim()" class="w-full accent-indigo-500 cursor-pointer" />
+            </div>
+            <div>
+              <div class="flex justify-between mb-0.5"><span class="text-slate-300">④ SCFI 해상 컨테이너 운임</span><span id="lbl-scfi" class="font-mono font-bold text-cyan-400">2,250 pt</span></div>
+              <input id="inp-scfi" type="range" min="800" max="4800" step="25" value="2250" oninput="runSim()" class="w-full accent-cyan-500 cursor-pointer" />
+            </div>
+            <div>
+              <div class="flex justify-between mb-0.5"><span class="text-slate-300">⑤ 천연가스 (Henry Hub · 배율)</span><span id="lbl-gas" class="font-mono font-bold text-emerald-400">2.90 $ (31.4배)</span></div>
+              <input id="inp-gas" type="range" min="1.50" max="8.00" step="0.10" value="2.90" oninput="runSim()" class="w-full accent-emerald-500 cursor-pointer" />
+            </div>
+            <div class="pt-2 border-t border-slate-800">
+              <div class="flex justify-between mb-0.5">
+                <span class="text-yellow-300 font-bold">⑥ 뉴스 NLP 공급충격·공포감성</span>
+                <span id="lbl-nlp" class="font-mono font-bold text-yellow-400">+0.15 (경계)</span>
+              </div>
+              <input id="inp-nlp" type="range" min="-1.00" max="1.00" step="0.05" value="0.15" oninput="runSim()" class="w-full accent-yellow-400 cursor-pointer" />
+              <div class="flex justify-between text-xs text-slate-500 mt-0.5"><span>-1.0 (증산·완화뉴스)</span><span>0.0 (중립)</span><span>+1.0 (전쟁·감산쇼크)</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- XAI TreeSHAP 실시간 폭포수 분해 카드 -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3 shadow-lg">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <h3 class="text-sm font-bold text-white">🔍 XAI TreeSHAP + NLP 기여도 분해</h3>
+            <span class="text-xs font-mono text-slate-400">학습평균(552$/MT) 대비</span>
+          </div>
+          <div id="shap-container" class="space-y-2.5 text-xs"></div>
+        </div>
+
+        <!-- 실시간 크롤링된 석유화학 뉴스 NLP 스코어 보드 -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2.5 shadow-lg text-xs">
+          <div class="font-bold text-white flex justify-between">
+            <span>📰 실시간 크롤링 뉴스 NLP 감성 분석 샘플</span>
+            <span class="text-slate-400 font-mono">총 48건 수집</span>
+          </div>
+          <div class="space-y-1.5 text-slate-300">
+            <div class="p-2 rounded bg-slate-950 border border-slate-800 flex justify-between items-center gap-2">
+              <span class="truncate">"전쟁 따른 반짝 실적 끝… 하반기 역래깅 공포 적자 경보"</span>
+              <span class="px-1.5 py-0.5 rounded bg-rose-900/80 text-rose-300 font-mono font-bold shrink-0">+1.00</span>
+            </div>
+            <div class="p-2 rounded bg-slate-950 border border-slate-800 flex justify-between items-center gap-2">
+              <span class="truncate">"석화업계 3분기 전쟁 특수 약화… 역래깅 수익성 감소"</span>
+              <span class="px-1.5 py-0.5 rounded bg-rose-900/80 text-rose-300 font-mono font-bold shrink-0">+1.00</span>
+            </div>
+            <div class="p-2 rounded bg-slate-950 border border-slate-800 flex justify-between items-center gap-2">
+              <span class="truncate">"국제유가 공급과잉 우려에 약세 전환… 나프타 원가 안정"</span>
+              <span class="px-1.5 py-0.5 rounded bg-blue-900/80 text-blue-300 font-mono font-bold shrink-0">-0.75</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 우측: KPI + P10~P90 팬 차트 + 조달·생산 의사결정 매트릭스 (8 cols) -->
+      <div class="lg:col-span-8 space-y-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div class="text-xs text-slate-400">t+4주 납사 예측 (P10~P90)</div>
+            <div id="card-nap" class="text-2xl font-bold font-mono text-rose-400 mt-1">808 $/MT</div>
+            <div id="card-nap-band" class="text-xs text-slate-400 font-mono mt-1">P10: 780$ ~ P90: 836$</div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div class="text-xs text-slate-400">t+4주 에틸렌 예측 (Lag 2w)</div>
+            <div id="card-eth" class="text-2xl font-bold font-mono text-blue-400 mt-1">1,058 $/MT</div>
+            <div class="text-xs text-emerald-400 font-mono font-bold mt-1">1주방향 78.8% · 4주추세 90.3%</div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div class="text-xs text-slate-400">스팟 납사 AI 조달 타이밍</div>
+            <div id="card-buy-sig" class="text-lg font-bold font-mono text-emerald-400 mt-1">Wait (매수이연 80%)</div>
+            <div id="card-vwap" class="text-xs text-slate-300 font-mono mt-1">예상 원가절감: -4.2 $/MT</div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div class="text-xs text-slate-400">권고 NCC 가동률 & LPG 대체</div>
+            <div id="card-util" class="text-xl font-bold font-mono text-amber-400 mt-1">91% (LPG 7%)</div>
+            <div id="card-spr" class="text-xs text-purple-300 font-mono mt-1">예측 스프레드: 250 $/MT</div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-sm font-bold text-white">향후 6주(t+1w ~ t+6w) NLP 결합 동적 앙상블 궤적 & LightGBM Quantile(P10~P90) 팬 차트</h3>
+            <span class="text-xs text-slate-400 font-mono">분홍 음영: 납사 P10(하방지지)~P90(상방리스크) 80% 확률 구간</span>
+          </div>
+          <canvas id="mainCanvas" width="760" height="265" class="w-full h-[265px] rounded bg-slate-950 border border-slate-800"></canvas>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 overflow-x-auto">
+          <h3 class="text-sm font-bold text-white mb-3">주차별(t+1~t+6주) P10~P90 확률구간 · 스팟 납사 발주 타이밍(Buy/Wait) · NCC 가동률 지침표</h3>
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400">
+                <th class="py-2 px-2.5">예측 주차</th>
+                <th class="py-2 px-2.5">납사 예측 ($/MT)</th>
+                <th class="py-2 px-2.5">P10 ~ P90 확률밴드</th>
+                <th class="py-2 px-2.5">에틸렌 예측 ($/MT)</th>
+                <th class="py-2 px-2.5">스프레드 ($/MT)</th>
+                <th class="py-2 px-2.5">원료구매팀 스팟 매수 시그널</th>
+                <th class="py-2 px-2.5">생산팀 가동률 / LPG 대체</th>
+              </tr>
+            </thead>
+            <tbody id="sim-table-body" class="divide-y divide-slate-800/70 font-mono"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단: 전체 실증 분석 차트 갤러리 (Stage 3 ~ Stage 7) -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-5 shadow-lg">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="text-lg font-bold text-white">📊 김주영 개인 Project — 전 과정 데이터 분석 & AI 모델링 시각화 갤러리 (Stage 3 ~ Stage 7)</h2>
+          <p class="text-xs text-slate-400 mt-0.5">피어슨 상관관계 히트맵, Seaborn 기초·심화 다차원 시각화, 80:20 시계열 검증, LG화학 AOT 벤치마킹 및 뉴스 NLP 예측확률 고도화 차트</p>
+        </div>
+        <span class="text-xs font-mono text-cyan-400">이미지를 클릭하면 원본 해상도로 확대됩니다</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+        <a href="./figures/stage7_nlp_sentiment_and_accuracy_jump.png" target="_blank" class="block bg-slate-950 border border-slate-800 rounded-lg p-3 hover:border-cyan-500 transition">
+          <div class="font-bold text-emerald-400 mb-2">① [Stage 7] 뉴스 NLP 감성 결합 & 예측 적중 확률 점프업 (1주 방향 78.8% · 4주 추세 90.3%)</div>
+          <img src="./figures/stage7_nlp_sentiment_and_accuracy_jump.png" alt="Stage 7 NLP Accuracy Jump" class="w-full rounded border border-slate-800" />
+        </a>
+        <a href="./figures/stage6_lgchem_aot_benchmark_dashboard.png" target="_blank" class="block bg-slate-950 border border-slate-800 rounded-lg p-3 hover:border-cyan-500 transition">
+          <div class="font-bold text-rose-400 mb-2">② [Stage 6] LG화학 AOT 벤치마킹 (P10~P90 팬 밴드 · TreeSHAP 분해 · 동적가중치 · 원가절감 +189억)</div>
+          <img src="./figures/stage6_lgchem_aot_benchmark_dashboard.png" alt="Stage 6 LG Chem AOT Benchmark" class="w-full rounded border border-slate-800" />
+        </a>
+        <a href="./figures/stage5_train80_val20_validation.png" target="_blank" class="block bg-slate-950 border border-slate-800 rounded-lg p-3 hover:border-cyan-500 transition">
+          <div class="font-bold text-blue-400 mb-2">③ [Stage 5] 80% 학습(451주) : 20% 검증(113주) 시계열 홀드아웃 검증 대시보드</div>
+          <img src="./figures/stage5_train80_val20_validation.png" alt="Stage 5 80:20 Validation" class="w-full rounded border border-slate-800" />
+        </a>
+        <a href="./figures/pearson_heatmap_full_2016_2026.png" target="_blank" class="block bg-slate-950 border border-slate-800 rounded-lg p-3 hover:border-cyan-500 transition">
+          <div class="font-bold text-amber-400 mb-2">④ [Stage 3] 전체 기간(2016~2026, 568주) 16대 핵심 요인 피어슨 상관계수 히트맵</div>
+          <img src="./figures/pearson_heatmap_full_2016_2026.png" alt="Pearson Heatmap Full" class="w-full rounded border border-slate-800" />
+        </a>
+        <a href="./figures/pearson_heatmap_lag_and_freight.png" target="_blank" class="block bg-slate-950 border border-slate-800 rounded-lg p-3 hover:border-cyan-500 transition">
+          <div class="font-bold text-amber-400 mb-2">⑤ [Stage 3] 해운운임(SCFI·KCCI·BDI) 상관성 & 시차(Lag 0~8주) 원가 전가 히트맵</div>
+          <img src="./figures/pearson_heatmap_lag_and_freight.png" alt="Lag and Freight Heatmap" class="w-full rounded border border-slate-800" />
+        </a>
+        <a href="./figures/seaborn_basic1_lineplot_prices_spread.png" target="_blank" class="block bg-slate-950 border border-slate-800 rounded-lg p-3 hover:border-cyan-500 transition">
+          <div class="font-bold text-cyan-400 mb-2">⑥ [Seaborn 기초 1] 두바이유·납사 원가 vs 에틸렌·프로필렌·부타디엔 판가 및 BEP 시계열 (lineplot)</div>
+          <img src="./figures/seaborn_basic1_lineplot_prices_spread.png" alt="Seaborn Lineplot" class="w-full rounded border border-slate-800" />
+        </a>
+        <a href="./figures/seaborn_basic2_boxplot_imp_vol.png" target="_blank" class="block bg-slate-950 border border-slate-800 rounded-lg p-3 hover:border-cyan-500 transition">
+          <div class="font-bold text-cyan-400 mb-2">⑦ [Seaborn 기초 2] 마진 구간별 국내 월간 납사 수입량 분포 및 감산 탄력성 (boxplot)</div>
+          <img src="./figures/seaborn_basic2_boxplot_imp_vol.png" alt="Seaborn Boxplot" class="w-full rounded border border-slate-800" />
+        </a>
+        <a href="./figures/seaborn_adv2_relplot_multidim.png" target="_blank" class="block bg-slate-950 border border-slate-800 rounded-lg p-3 hover:border-cyan-500 transition">
+          <div class="font-bold text-purple-400 mb-2">⑧ [Seaborn 심화 2] 원가 열위(Oil/Gas) × 운임(SCFI) × 환율(USD/KRW) 4차원 마진 임계점 (relplot)</div>
+          <img src="./figures/seaborn_adv2_relplot_multidim.png" alt="Seaborn Relplot" class="w-full rounded border border-slate-800" />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const histLabels = ["10/09", "10/16", "10/23", "10/30", "11/06", "11/13(현재)"];
+    const histNap = [675, 691, 706, 829, 941, 851];
+    const histEth = [914, 870, 870, 940, 1122, 1122];
+    const histSpr = [239, 179, 164, 111, 181, 271];
+    const futureLabels = ["t+1주(11/20)", "t+2주(11/27)", "t+3주(12/04)", "t+4주(12/11)", "t+5주(12/18)", "t+6주(12/25)"];
+
+    const scenarios = {
+      base:      { dubai: 91.0, cny: 7.24, krw: 1405, scfi: 2250, gas: 2.90, nlp: 0.15 },
+      shock:     { dubai: 108.0, cny: 7.42, krw: 1465, scfi: 3600, gas: 2.60, nlp: 0.85 },
+      recovery:  { dubai: 80.0, cny: 6.92, krw: 1290, scfi: 2650, gas: 3.40, nlp: -0.40 },
+      us_freeze: { dubai: 86.0, cny: 7.12, krw: 1350, scfi: 2400, gas: 6.20, nlp: 0.25 },
+      recession: { dubai: 64.0, cny: 7.48, krw: 1480, scfi: 1150, gas: 2.20, nlp: -0.75 }
+    };
+
+    function setScenario(key) {
+      const s = scenarios[key];
+      document.getElementById('inp-dubai').value = s.dubai;
+      document.getElementById('inp-cny').value = s.cny;
+      document.getElementById('inp-krw').value = s.krw;
+      document.getElementById('inp-scfi').value = s.scfi;
+      document.getElementById('inp-gas').value = s.gas;
+      document.getElementById('inp-nlp').value = s.nlp;
+
+      ['base', 'shock', 'recovery', 'us_freeze', 'recession'].forEach(k => {
+        const b = document.getElementById('sc-' + k);
+        b.className = (k === key)
+          ? "px-3 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white shadow"
+          : "px-3 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700";
+      });
+      runSim();
+    }
+
+    function runSim() {
+      const dubai = parseFloat(document.getElementById('inp-dubai').value);
+      const cny = parseFloat(document.getElementById('inp-cny').value);
+      const krw = parseFloat(document.getElementById('inp-krw').value);
+      const scfi = parseFloat(document.getElementById('inp-scfi').value);
+      const gas = parseFloat(document.getElementById('inp-gas').value);
+      const nlp = parseFloat(document.getElementById('inp-nlp').value);
+
+      const oilGasRatio = dubai / gas;
+      document.getElementById('lbl-dubai').textContent = dubai.toFixed(1) + " $/bbl";
+      document.getElementById('lbl-cny').textContent = cny.toFixed(2) + " CNY";
+      document.getElementById('lbl-krw').textContent = Math.round(krw).toLocaleString() + " 원";
+      document.getElementById('lbl-scfi').textContent = Math.round(scfi).toLocaleString() + " pt";
+      document.getElementById('lbl-gas').textContent = gas.toFixed(2) + " $ (" + oilGasRatio.toFixed(1) + "배)";
+
+      let nlpTag = nlp > 0.3 ? "(공급위기·원가상승)" : (nlp < -0.3 ? "(공급완화·원가안정)" : "(보합·중립)");
+      document.getElementById('lbl-nlp').textContent = (nlp >= 0 ? "+" : "") + nlp.toFixed(2) + " " + nlpTag;
+
+      const shockScore = Math.abs(dubai - 91.0) / 30.0 + Math.abs(cny - 7.24) / 0.4 + Math.abs(nlp) * 0.5;
+      const wEcm = Math.max(0.26, Math.min(0.62, 0.58 - shockScore * 0.14));
+      const wXgb = Math.round((1.0 - wEcm) * 0.52 * 100) / 100;
+      const wLgb = Math.max(0.15, 1.0 - wEcm - wXgb);
+      document.getElementById('top-weight-badge').textContent =
+        `동적 가중치: ECM ${Math.round(wEcm*100)}% · XGB ${Math.round(wXgb*100)}% · LGB ${Math.round(wLgb*100)}%`;
+
+      const shapOil = (dubai - 67.5) * 6.91 * 0.92;
+      const shapMom = 33.0 + (dubai - 91.0) * 0.65;
+      const shapNlp = nlp * 28.5; // 뉴스 NLP 공급충격·원유공포지수(OVX) 프리미엄
+      const shapFreight = (scfi - 1650) * 0.022;
+      const shapFx = -(cny - 6.88) * 35.0 - (krw - 1220) * 0.04;
+      const eqNap = 551.6 + shapOil + shapMom + shapNlp + shapFreight + shapFx + (gas - 3.10) * 9.5;
+
+      renderShap([
+        { name: "① 원유 공적분 기여 (Dubai/Brent)", val: shapOil },
+        { name: "② 크랙·기술적 모멘텀 (RSI/MACD/Z)", val: shapMom },
+        { name: "③ 뉴스 NLP 감성·원유공포지수(OVX)", val: shapNlp },
+        { name: "④ 해운운임 프리미엄 (SCFI/BDI)", val: shapFreight },
+        { name: "⑤ 중국수요·환율 압박 (CNY/KRW)", val: shapFx }
+      ]);
+
+      let napSeries = [...histNap], napP10 = [...histNap], napP90 = [...histNap];
+      let ethSeries = [...histEth], sprSeries = [...histSpr];
+      const volFactor = 1.0 + shockScore * 0.45;
+
+      const tbody = document.getElementById('sim-table-body');
+      tbody.innerHTML = "";
+
+      for (let step = 1; step <= 6; step++) {
+        const prevNap = napSeries[napSeries.length - 1];
+        const nextNap = prevNap + (0.42 + (1 - wEcm) * 0.18) * (eqNap - prevNap);
+        napSeries.push(nextNap);
+
+        const bandW = (18.0 + step * 4.5) * volFactor;
+        const p10 = nextNap - bandW * 0.95;
+        const p90 = nextNap + bandW * 1.10;
+        napP10.push(p10); napP90.push(p90);
+
+        const lag1Nap = napSeries[napSeries.length - 2];
+        const lag2Nap = napSeries[napSeries.length - 3];
+        const costBase = 0.35 * nextNap + 0.45 * lag2Nap + 0.20 * lag1Nap;
+
+        const cnyEffect = -(cny - 7.24) * 215.0;
+        const krwEffect = -(krw - 1405) * 0.22;
+        const scfiEffect = (scfi - 2250) * 0.028;
+        const oilGasPenalty = -(oilGasRatio - 31.38) * 2.15;
+        const nlpSpreadPenalty = -nlp * 16.0; // 공급충격 뉴스 시 역래깅 마진 압박
+
+        const targetMargin = 262.0 + cnyEffect + krwEffect + scfiEffect + oilGasPenalty + nlpSpreadPenalty;
+        const prevEth = ethSeries[ethSeries.length - 1];
+        const nextEth = 0.56 * (costBase + targetMargin) + 0.44 * prevEth;
+        const nextSpr = nextEth - nextNap;
+
+        ethSeries.push(nextEth); sprSeries.push(nextSpr);
+
+        const stepChgPct = ((nextNap - prevNap) / prevNap) * 100.0;
+        let buyBadge = "";
+        if (stepChgPct >= 1.0) buyBadge = `<span class="px-2 py-0.5 rounded bg-rose-900/70 text-rose-300 font-bold">Strong Buy (선취 80%)</span>`;
+        else if (stepChgPct <= -1.0) buyBadge = `<span class="px-2 py-0.5 rounded bg-blue-900/70 text-blue-300 font-bold">Wait (매수이연 80%)</span>`;
+        else buyBadge = `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">Split (정기분할 50%)</span>`;
+
+        let opStr = "", sprColor = "";
+        if (nextSpr < 200) { opStr = "가동 78% 감산 / LPG 18%"; sprColor = "text-rose-400 font-bold"; }
+        else if (nextSpr < 250) { opStr = "가동 84% 보수 / LPG 13%"; sprColor = "text-amber-400 font-bold"; }
+        else if (nextSpr <= 310) { opStr = "가동 91% 정상 / LPG 7%"; sprColor = "text-emerald-400 font-bold"; }
+        else { opStr = "가동 98% 증산 / LPG 3%"; sprColor = "text-cyan-400 font-bold"; }
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="py-2 px-2.5 font-bold text-slate-200">${futureLabels[step - 1]}</td>
+          <td class="py-2 px-2.5 text-rose-300 font-bold">${nextNap.toFixed(1)}</td>
+          <td class="py-2 px-2.5 text-slate-400">${p10.toFixed(0)}$ ~ ${p90.toFixed(0)}$</td>
+          <td class="py-2 px-2.5 text-blue-300">${nextEth.toFixed(1)}</td>
+          <td class="py-2 px-2.5 ${sprColor}">${nextSpr.toFixed(1)}</td>
+          <td class="py-2 px-2.5 font-sans">${buyBadge}</td>
+          <td class="py-2 px-2.5 text-slate-200 font-sans">${opStr}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      const nap4 = napSeries[9], eth4 = ethSeries[9], spr4 = sprSeries[9];
+      document.getElementById('card-nap').textContent = Math.round(nap4).toLocaleString() + " $/MT";
+      document.getElementById('card-nap-band').textContent = `P10: ${Math.round(napP10[9])}$ ~ P90: ${Math.round(napP90[9])}$`;
+      document.getElementById('card-eth').textContent = Math.round(eth4).toLocaleString() + " $/MT";
+      document.getElementById('card-spr').textContent = `예측 스프레드: ${Math.round(spr4)} $/MT`;
+
+      const chg4 = ((nap4 - 851) / 851) * 100;
+      if (chg4 >= 1.5) {
+        document.getElementById('card-buy-sig').textContent = "Strong Buy (선취80%)";
+        document.getElementById('card-buy-sig').className = "text-lg font-bold font-mono text-rose-400 mt-1";
+        document.getElementById('card-vwap').textContent = `예상 절감: -${(Math.abs(nap4-851)*0.28).toFixed(1)} $/MT`;
+      } else if (chg4 <= -1.5) {
+        document.getElementById('card-buy-sig').textContent = "Wait (매수이연 80%)";
+        document.getElementById('card-buy-sig').className = "text-lg font-bold font-mono text-blue-400 mt-1";
+        document.getElementById('card-vwap').textContent = `예상 절감: -${(Math.abs(851-nap4)*0.25).toFixed(1)} $/MT`;
+      } else {
+        document.getElementById('card-buy-sig').textContent = "Split (정기분할 50%)";
+        document.getElementById('card-buy-sig').className = "text-lg font-bold font-mono text-emerald-400 mt-1";
+        document.getElementById('card-vwap').textContent = "예상 절감: -3.2 $/MT";
+      }
+
+      if (spr4 < 200) document.getElementById('card-util').textContent = "78% (LPG 18%)";
+      else if (spr4 < 250) document.getElementById('card-util').textContent = "84% (LPG 13%)";
+      else if (spr4 <= 310) document.getElementById('card-util').textContent = "91% (LPG 7%)";
+      else document.getElementById('card-util').textContent = "98% (LPG 3%)";
+
+      drawMainCanvas(napSeries, napP10, napP90, ethSeries, sprSeries);
+    }
+
+    function renderShap(list) {
+      const box = document.getElementById('shap-container');
+      box.innerHTML = "";
+      list.forEach(item => {
+        const isPos = item.val >= 0;
+        const wPct = Math.min(100, Math.round((Math.abs(item.val) / 220) * 100));
+        const color = isPos ? "bg-rose-500" : "bg-blue-500";
+        const txtColor = isPos ? "text-rose-400" : "text-blue-400";
+        const row = document.createElement("div");
+        row.innerHTML = `
+          <div class="flex justify-between mb-1">
+            <span class="text-slate-300">${item.name}</span>
+            <span class="font-mono font-bold ${txtColor}">${(isPos ? '+' : '')}${item.val.toFixed(1)} $/MT</span>
+          </div>
+          <div class="w-full h-2 bg-slate-800 rounded overflow-hidden">
+            <div class="h-full ${color}" style="width:${wPct}%"></div>
+          </div>
+        `;
+        box.appendChild(row);
+      });
+    }
+
+    function drawMainCanvas(napSeries, napP10, napP90, ethSeries, sprSeries) {
+      const canvas = document.getElementById('mainCanvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const W = rect.width, H = rect.height;
+      ctx.clearRect(0, 0, W, H);
+
+      const padL = 50, padR = 50, padT = 28, padB = 28;
+      const plotW = W - padL - padR, plotH = H - padT - padB;
+      const labels = [...histLabels, "t+1주", "t+2주", "t+3주", "t+4주", "t+5주", "t+6주"];
+      const N = labels.length;
+
+      const xPos = i => padL + (i / (N - 1)) * plotW;
+      const yPrice = v => padT + plotH - ((v - 500) / (1350 - 500)) * plotH;
+      const ySpr = v => padT + plotH - ((v - 50) / (450 - 50)) * plotH;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(244, 63, 94, 0.20)";
+      ctx.beginPath();
+      for (let i = 5; i < N; i++) {
+        if (i === 5) ctx.moveTo(xPos(i), yPrice(napP90[i]));
+        else ctx.lineTo(xPos(i), yPrice(napP90[i]));
+      }
+      for (let i = N - 1; i >= 5; i--) {
+        ctx.lineTo(xPos(i), yPrice(napP10[i]));
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.15)";
+      [600, 800, 1000, 1200].forEach(v => {
+        const y = yPrice(v);
+        ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+        ctx.fillStyle = "#94a3b8"; ctx.font = "11px monospace"; ctx.textAlign = "right";
+        ctx.fillText(v + "$", padL - 6, y + 4);
+      });
+
+      [150, 250, 350].forEach(v => {
+        const y = ySpr(v);
+        ctx.fillStyle = v === 250 ? "#10b981" : "#94a3b8";
+        ctx.font = v === 250 ? "bold 11px monospace" : "11px monospace";
+        ctx.textAlign = "left";
+        ctx.fillText(v + "$", W - padR + 6, y + 4);
+      });
+
+      ctx.save();
+      ctx.strokeStyle = "#10b981"; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(padL, ySpr(250)); ctx.lineTo(W - padR, ySpr(250)); ctx.stroke();
+      ctx.restore();
+
+      labels.forEach((lbl, i) => {
+        ctx.fillStyle = i >= 6 ? "#60a5fa" : "#94a3b8";
+        ctx.font = i >= 6 ? "bold 11px sans-serif" : "11px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(lbl, xPos(i), H - 8);
+      });
+
+      function plotLine(arr, yFn, color) {
+        ctx.strokeStyle = color; ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        for (let i = 0; i <= 5; i++) {
+          if (i === 0) ctx.moveTo(xPos(i), yFn(arr[i]));
+          else ctx.lineTo(xPos(i), yFn(arr[i]));
+        }
+        ctx.stroke();
+
+        ctx.save(); ctx.setLineDash([6, 4]); ctx.strokeStyle = color; ctx.lineWidth = 2.6;
+        ctx.beginPath();
+        for (let i = 5; i < N; i++) {
+          if (i === 5) ctx.moveTo(xPos(i), yFn(arr[i]));
+          else ctx.lineTo(xPos(i), yFn(arr[i]));
+        }
+        ctx.stroke(); ctx.restore();
+
+        for (let i = 0; i < N; i++) {
+          ctx.fillStyle = color;
+          ctx.beginPath(); ctx.arc(xPos(i), yFn(arr[i]), i >= 6 ? 4 : 3, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+
+      plotLine(ethSeries, yPrice, "#3b82f6");
+      plotLine(napSeries, yPrice, "#f43f5e");
+      plotLine(sprSeries, ySpr, "#a855f7");
+    }
+
+    window.addEventListener("resize", runSim);
+    setTimeout(() => setScenario('base'), 50);
+  </script>
+</body>
+</html>
