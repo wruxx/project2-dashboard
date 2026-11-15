@@ -23,10 +23,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 PYTHON = sys.executable
 
 PIPELINE_STEPS = [
-    ("1단계: 글로벌 유가·가스·환율(yfinance) 최신 데이터 수집", ROOT / "scripts" / "fetch_base_macro_energy.py"),
-    ("2단계: 두바이유·관세청 석화단가·해상운임(SCFI/KCCI/BDI) 크롤링 및 병합", ROOT / "scripts" / "stage2_expand_dubai_petrochem_freight.py"),
+    ("1단계: 글로벌 유가·가스·환율(yfinance) 최신 데이터 수집", ROOT / "scripts" / "fetch_stage1_macro_energy.py"),
+    ("2단계: 두바이유·관세청 석화단가·해상운임(SCFI/KCCI/BDI) 크롤링 및 병합", ROOT / "scripts" / "build_full_petrochem_database.py"),
     ("3단계: LG화학 AOT 하이브리드 앙상블 모델링", ROOT / "scripts" / "stage6_lgchem_aot_upgrade.py"),
-    ("4단계: 석유화학 뉴스 RSS 크롤링 & NLP 감성분석 및 대시보드 갱신", ROOT / "scripts" / "stage7_nlp_news_sentiment_upgrade.py"),
+    ("4단계: 석유화학 뉴스 RSS 크롤링 & NLP 감성분석 및 대시보드 갱신", ROOT / "scripts" / "stage7_nlp_sentiment_and_direction_boost.py"),
 ]
 
 
