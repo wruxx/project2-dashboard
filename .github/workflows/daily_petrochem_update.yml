@@ -1,0 +1,48 @@
+name: Daily Petrochem AI Dashboard Auto-Update
+
+on:
+  schedule:
+    # 매일 한국시간(KST) 오전 08:00 (UTC 23:00) 자동 실행
+    - cron: '0 23 * * *'
+  workflow_dispatch: # GitHub Actions 탭에서 언제든 수동 즉시 실행 가능
+
+permissions:
+  contents: write
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install required Python packages
+        run: |
+          pip install --upgrade pip
+          pip install yfinance pandas numpy scipy scikit-learn lightgbm shap matplotlib seaborn requests
+
+      - name: Run Daily Data Crawling, NLP Sentiment & AI Forecasting Pipeline
+        working-directory: "김주영 개인 Project"
+        run: |
+          python scripts/daily_auto_update.py
+
+      - name: Sync root and dashboard copies
+        run: |
+          if [ -d "dashboard/김주영 개인 Project" ]; then
+            cp -r "김주영 개인 Project/index.html" "dashboard/김주영 개인 Project/" || true
+            cp -r "김주영 개인 Project/interactive_petrochem_dashboard.html" "dashboard/김주영 개인 Project/" || true
+            cp -r "김주영 개인 Project/figures/"* "dashboard/김주영 개인 Project/figures/" || true
+            cp -r "김주영 개인 Project/data/"* "dashboard/김주영 개인 Project/data/" || true
+          fi
+
+      - name: Commit & Push updated DB and Dashboard (Triggers Cloudflare & GitHub Pages)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || (git commit -m "chore(auto-update): daily petrochem DB & AI dashboard refresh ($(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M KST'))" && git push origin main)
