@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>잠실역매장 2026년 6월 주문량 vs 최근7일평균</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f8fafc; margin: 0; padding: 24px; color: #1e293b; }
+    .container { max-width: 1050px; margin: 0 auto; background: white; padding: 28px; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    h1 { font-size: 22px; margin-top: 0; color: #0f172a; }
+    p.desc { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+    #plot-area { width: 100%; min-height: 480px; }
+    .note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px 20px; margin-top: 24px; border-radius: 4px; line-height: 1.7; }
+    .note strong { color: #1d4ed8; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>잠실역매장 2026년 6월 실제 주문건수 vs 최근 7일 평균</h1>
+  <p class="desc">마우스를 선 그래프에 올리면 해당 날짜(요일)와 실제 주문건수, 전날까지의 7일 이동평균을 함께 확인할 수 있습니다.</p>
+  
+  <div id="plot-area"></div>
+
+  <div class="note">
+    <strong>💡 하루 주문량의 급등락 vs 최근 평균 흐름 비교 분석:</strong><br>
+    1. <strong>하루 주문량의 역동적 급등락 (파란선):</strong> 주말(토/일)과 평일의 수요 격차, 그리고 특정 이벤트일에 주문량이 333건에서 최대 517건까지 요동치며 <strong>하루 사이에 100건 이상 급등락</strong>하는 강한 단기 변동성을 보입니다.<br>
+    2. <strong>최근 7일 평균의 완만한 기저 흐름 (주황선):</strong> 7일 이동평균은 단기적인 요일별 튐 현상을 부드럽게 흡수하여 <strong>월초 370건 수준에서 월말 450건 수준으로 점진적으로 체급(기저 수요)이 성장해가는 완만한 상승 트렌드</strong>를 명확하게 보여줍니다.<br>
+    3. <strong>시차(Lag) 효과 확인:</strong> 이동평균은 과거 7일의 실적만을 반영하므로, 실제 주문량이 급증(예: 6월 13~14일)한 직후에는 뒤늦게 따라 올라가는 <strong>후행성(Lagging)</strong> 특징을 띱니다.
+  </div>
+</div>
+
+<script>
+const dates = ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-19", "2026-06-20", "2026-06-21", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-27", "2026-06-28", "2026-06-29", "2026-06-30"];
+const days = ["\uc6d4", "\ud654", "\uc218", "\ubaa9", "\uae08", "\ud1a0", "\uc77c", "\uc6d4", "\ud654", "\uc218", "\ubaa9", "\uae08", "\ud1a0", "\uc77c", "\uc6d4", "\ud654", "\uc218", "\ubaa9", "\uae08", "\ud1a0", "\uc77c", "\uc6d4", "\ud654", "\uc218", "\ubaa9", "\uae08", "\ud1a0", "\uc77c", "\uc6d4", "\ud654"];
+const actual = [333, 335, 369, 409, 360, 455, 389, 432, 452, 425, 433, 426, 501, 517, 437, 451, 416, 456, 456, 453, 470, 384, 377, 361, 387, 471, 408, 451, 397, 395];
+const rolling = [371.1, 375.6, 375.4, 382.1, 371.9, 357.6, 374.3, 378.6, 392.7, 409.4, 417.4, 420.9, 430.3, 436.9, 455.1, 455.9, 455.7, 454.4, 457.7, 462.0, 455.1, 448.4, 440.9, 430.3, 422.4, 412.6, 414.7, 408.3, 405.6, 407.4];
+
+const traceActual = {
+  x: dates,
+  y: actual,
+  name: '실제 주문건수 (당일)',
+  type: 'scatter',
+  mode: 'lines+markers',
+  line: { color: '#2563eb', width: 2.5 },
+  marker: { size: 7, color: '#1d4ed8' },
+  customdata: days,
+  hovertemplate: '%{x} (%{customdata})<br>실제 주문건수: <b>%{y}건</b><extra></extra>'
+};
+
+const traceRolling = {
+  x: dates,
+  y: rolling,
+  name: '최근 7일 평균 (이동평균)',
+  type: 'scatter',
+  mode: 'lines+markers',
+  line: { color: '#f97316', width: 2.5 },
+  marker: { size: 6, color: '#ea580c' },
+  customdata: days,
+  hovertemplate: '%{x} (%{customdata})<br>최근 7일 평균: <b>%{y}건</b><extra></extra>'
+};
+
+const layout = {
+  title: { text: '잠실역매장 일별 주문건수 및 7일 이동평균 추이 (2026.06)', font: { size: 16 } },
+  hovermode: 'x unified',
+  xaxis: { title: '날짜', tickangle: -45, gridcolor: '#f1f5f9' },
+  yaxis: { title: '주문건수 (건)', gridcolor: '#f1f5f9' },
+  legend: { orientation: 'h', y: 1.1, x: 0.25 },
+  margin: { l: 50, r: 30, t: 60, b: 70 }
+};
+
+Plotly.newPlot('plot-area', [traceActual, traceRolling], layout, { responsive: true });
+</script>
+</body>
+</html>
